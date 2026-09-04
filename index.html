@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>我的个人博客</title>
+    <title>王涛的自控笔记</title>
     <style>
-        /* ---------- 全局样式 ---------- */
+        /* ---------- 全局 ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -43,51 +43,80 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .weather-box {
+
+        /* ---------- 天气 ---------- */
+        .weather-wrapper {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+        .weather-display {
             background: #f0f4ff;
             padding: 10px 20px;
             border-radius: 40px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 500;
             color: #1e40af;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: background 0.2s;
         }
-        .weather-box #weatherText {
-            font-size: 16px;
+        .weather-display:hover {
+            background: #dce6f5;
+        }
+        .weather-display .arrow {
+            font-size: 12px;
+            margin-left: 4px;
+            transition: transform 0.25s;
+        }
+        .weather-display .arrow.open {
+            transform: rotate(180deg);
         }
 
-        /* ---------- 城市控制栏 ---------- */
-        .weather-controls {
-            display: flex;
-            justify-content: flex-end;
+        .weather-settings {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            min-width: 220px;
+            display: none;
+            z-index: 10;
+            flex-direction: column;
             gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: -10px;
-            margin-bottom: 20px;
         }
-        .weather-controls button,
-        .weather-controls select {
+        .weather-settings.open {
+            display: flex;
+        }
+        .weather-settings button,
+        .weather-settings select {
             background: #eef2f6;
             border: none;
-            padding: 6px 18px;
-            border-radius: 20px;
+            padding: 8px 14px;
+            border-radius: 30px;
             font-size: 14px;
             cursor: pointer;
             color: #1f2937;
             outline: none;
             transition: 0.15s;
+            width: 100%;
+            text-align: left;
         }
-        .weather-controls button:hover {
+        .weather-settings button:hover,
+        .weather-settings select:hover {
             background: #dce2ec;
         }
-        .weather-controls select:hover {
-            background: #dce2ec;
+        .weather-settings select {
+            appearance: auto;
         }
 
         /* ---------- 文章列表 ---------- */
+        .post-list {
+            margin-top: 10px;
+        }
         .post {
             background: #fafbfc;
             border-radius: 16px;
@@ -113,6 +142,21 @@
         .post .meta {
             font-size: 14px;
             color: #6b7280;
+        }
+        .post .summary {
+            margin-top: 8px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        .empty-tip {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 0;
+            background: #fafbfc;
+            border-radius: 16px;
+        }
+        .empty-tip a {
+            color: #3b82f6;
         }
 
         /* ---------- 留言板占位 ---------- */
@@ -147,9 +191,10 @@
             .blog-title {
                 font-size: 24px;
             }
-            .weather-controls {
-                justify-content: flex-start;
-                margin-top: 0;
+            .weather-settings {
+                right: auto;
+                left: 0;
+                width: 100%;
             }
         }
     </style>
@@ -158,60 +203,50 @@
 
     <div class="container">
 
-        <!-- ====== 头部：标题 + 天气 ====== -->
+        <!-- ====== 头部 ====== -->
         <div class="header">
-            <div class="blog-title">📝 小白的博客</div>
-            <div class="weather-box">
-                <span id="weatherText">🌤️ 加载中...</span>
+            <div class="blog-title">📝 王涛的自控笔记</div>
+
+            <!-- 天气组件 -->
+            <div class="weather-wrapper" id="weatherWrapper">
+                <div class="weather-display" id="weatherDisplay">
+                    <span id="weatherIcon">☀️</span>
+                    <span id="weatherCity">加载中</span>
+                    <span id="weatherTemp">--°C</span>
+                    <span class="arrow" id="arrowIcon">▾</span>
+                </div>
+                <div class="weather-settings" id="weatherSettings">
+                    <button id="getLocationBtn">📍 获取当前位置</button>
+                    <select id="citySelect">
+                        <option value="">🌆 选择城市...</option>
+                        <option value="39.9,116.4,北京">北京</option>
+                        <option value="31.2,121.5,上海">上海</option>
+                        <option value="23.1,113.3,广州">广州</option>
+                        <option value="22.5,114.1,深圳">深圳</option>
+                        <option value="30.6,114.3,武汉">武汉</option>
+                        <option value="34.3,108.9,西安">西安</option>
+                        <option value="30.6,104.1,成都">成都</option>
+                        <option value="29.6,106.5,重庆">重庆</option>
+                        <option value="32.1,118.8,南京">南京</option>
+                        <option value="30.3,120.2,杭州">杭州</option>
+                        <option value="36.1,120.4,青岛">青岛</option>
+                        <option value="43.8,87.6,乌鲁木齐">乌鲁木齐</option>
+                        <option value="45.8,126.5,哈尔滨">哈尔滨</option>
+                        <option value="25.0,121.5,台北">台北</option>
+                        <option value="22.3,114.2,香港">香港</option>
+                        <option value="21.2,110.4,海口">海口</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <!-- ====== 城市选择控制栏 ====== -->
-        <div class="weather-controls">
-            <button id="getLocationBtn">📍 获取当前位置</button>
-            <select id="citySelect">
-                <option value="">🌆 选择城市...</option>
-                <option value="39.9,116.4,北京">北京</option>
-                <option value="31.2,121.5,上海">上海</option>
-                <option value="23.1,113.3,广州">广州</option>
-                <option value="22.5,114.1,深圳">深圳</option>
-                <option value="30.6,114.3,武汉">武汉</option>
-                <option value="34.3,108.9,西安">西安</option>
-                <option value="30.6,104.1,成都">成都</option>
-                <option value="29.6,106.5,重庆">重庆</option>
-                <option value="32.1,118.8,南京">南京</option>
-                <option value="30.3,120.2,杭州">杭州</option>
-                <option value="36.1,120.4,青岛">青岛</option>
-                <option value="43.8,87.6,乌鲁木齐">乌鲁木齐</option>
-                <option value="45.8,126.5,哈尔滨">哈尔滨</option>
-                <option value="25.0,121.5,台北">台北</option>
-                <option value="22.3,114.2,香港">香港</option>
-                <option value="21.2,110.4,海口">海口</option>
-            </select>
-        </div>
-
-        <!-- ====== 博客文章列表 ====== -->
+        <!-- ====== 文章列表（动态加载） ====== -->
         <h2 style="margin-bottom:18px; font-size:20px;">📖 最新文章</h2>
-
-        <div class="post">
-            <h3><a href="#">Hello World，我的第一个博客！</a></h3>
-            <div class="meta">📅 2026-09-04 ｜ 💬 3条留言</div>
-            <p style="margin-top:8px; color:#4b5563;">终于把博客搭起来了，以后会在这里分享学习笔记和生活感悟。</p>
+        <div class="post-list" id="postList">
+            <div style="text-align:center; padding:30px; color:#9ca3af;">⏳ 文章加载中...</div>
         </div>
 
-        <div class="post">
-            <h3><a href="#">今天学会了用 GitHub 做留言板</a></h3>
-            <div class="meta">📅 2026-09-03 ｜ 💬 1条留言</div>
-            <p style="margin-top:8px; color:#4b5563;">用 Giscus 给博客加上了评论功能，访客可以用 GitHub 账号留言啦。</p>
-        </div>
-
-        <div class="post">
-            <h3><a href="#">天气功能升级 ☀️</a></h3>
-            <div class="meta">📅 2026-09-02 ｜ 💬 0条留言</div>
-            <p style="margin-top:8px; color:#4b5563;">现在可以自动定位，也可以手动切换城市查看不同地区的天气。</p>
-        </div>
-
-        <!-- ====== 留言板（暂未配置） ====== -->
+        <!-- ====== 留言板占位 ====== -->
         <div class="comment-section">
             <h2>💬 留言板</h2>
             <div class="hint">
@@ -226,42 +261,75 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ====== JavaScript：自动定位 + 手动选择城市 ====== -->
+    <!-- ====== JavaScript ====== -->
     <script>
-        // ---------- 默认城市（定位失败时使用） ----------
-        const defaultLat = 39.9;
-        const defaultLon = 116.4;
-        const defaultCity = '北京';
+        // ================================================================
+        // 1. 请在这里配置你的 GitHub 仓库信息！
+        // ================================================================
+        const GITHUB_USERNAME = '你的GitHub用户名'; // 改成你的用户名，比如 'zhangsan'
+        const GITHUB_REPO = 'my-blog'; // 改成你的仓库名，比如 'my-blog'
+        // ================================================================
 
-        // ---------- DOM 元素 ----------
-        const weatherText = document.getElementById('weatherText');
+        // ---------- 天气逻辑（和之前一样） ----------
+        const weatherIcon = document.getElementById('weatherIcon');
+        const weatherCity = document.getElementById('weatherCity');
+        const weatherTemp = document.getElementById('weatherTemp');
+        const arrowIcon = document.getElementById('arrowIcon');
+        const weatherWrapper = document.getElementById('weatherWrapper');
+        const weatherSettings = document.getElementById('weatherSettings');
         const citySelect = document.getElementById('citySelect');
         const getLocationBtn = document.getElementById('getLocationBtn');
 
-        // ---------- 获取天气 ----------
+        const DEFAULT_LAT = 39.9;
+        const DEFAULT_LON = 116.4;
+        const DEFAULT_CITY = '北京';
+
         function fetchWeather(lat, lon, cityName) {
             const url =
                 `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
-
-            weatherText.innerHTML = '⏳ 加载中...';
-
+            weatherCity.textContent = '加载中...';
+            weatherTemp.textContent = '--°C';
             fetch(url)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    const weather = data.current_weather;
-                    const temp = Math.round(weather.temperature);
-                    const code = weather.weathercode;
+                    const w = data.current_weather;
+                    const temp = Math.round(w.temperature);
+                    const code = w.weathercode;
                     const emoji = getWeatherEmoji(code);
-
-                    const displayCity = cityName || '当前位置';
-                    weatherText.innerHTML = `${emoji} ${displayCity} ${temp}°C`;
+                    if (cityName) {
+                        updateDisplay(emoji, cityName, temp);
+                    } else {
+                        reverseGeocode(lat, lon, emoji, temp);
+                    }
                 })
                 .catch(() => {
-                    weatherText.innerHTML = '⚠️ 加载失败';
+                    weatherCity.textContent = '加载失败';
+                    weatherTemp.textContent = '--°C';
                 });
         }
 
-        // ---------- 天气代码转表情 ----------
+        function reverseGeocode(lat, lon, emoji, temp) {
+            const url =
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=zh`;
+            fetch(url, { headers: { 'User-Agent': 'MyBlog/1.0' } })
+                .then(res => res.json())
+                .then(data => {
+                    let city = '当前位置';
+                    if (data.address) {
+                        city = data.address.city || data.address.town || data.address.village || data.address.county ||
+                            '当前位置';
+                    }
+                    updateDisplay(emoji, city, temp);
+                })
+                .catch(() => updateDisplay(emoji, '当前位置', temp));
+        }
+
+        function updateDisplay(emoji, city, temp) {
+            weatherIcon.textContent = emoji;
+            weatherCity.textContent = city;
+            weatherTemp.textContent = temp + '°C';
+        }
+
         function getWeatherEmoji(code) {
             if (code === 0) return '☀️';
             if (code <= 3) return '⛅';
@@ -271,58 +339,126 @@
             return '🌤️';
         }
 
-        // ---------- 使用浏览器定位 ----------
-        function getLocationAndWeather() {
-            if (navigator.geolocation) {
-                weatherText.innerHTML = '⏳ 定位中...';
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const lat = pos.coords.latitude;
-                        const lon = pos.coords.longitude;
-                        citySelect.value = ''; // 清空选择框
-                        fetchWeather(lat, lon, '当前位置');
-                    },
-                    () => {
-                        weatherText.innerHTML = '📍 定位失败，使用默认城市';
-                        fetchWeather(defaultLat, defaultLon, defaultCity);
-                    }
-                );
-            } else {
-                weatherText.innerHTML = '⚠️ 浏览器不支持定位';
-                fetchWeather(defaultLat, defaultLon, defaultCity);
+        function locateAndFetch() {
+            if (!navigator.geolocation) {
+                weatherCity.textContent = '不支持定位';
+                fetchWeather(DEFAULT_LAT, DEFAULT_LON, DEFAULT_CITY);
+                return;
             }
-        }
-
-        // ---------- 手动选择城市 ----------
-        citySelect.addEventListener('change', function() {
-            const value = this.value;
-            if (!value) return;
-
-            const parts = value.split(',');
-            const lat = parseFloat(parts[0]);
-            const lon = parseFloat(parts[1]);
-            const cityName = parts[2];
-
-            fetchWeather(lat, lon, cityName);
-        });
-
-        // ---------- 点击"获取当前位置"按钮 ----------
-        getLocationBtn.addEventListener('click', getLocationAndWeather);
-
-        // ---------- 页面加载时自动定位 ----------
-        if (navigator.geolocation) {
+            weatherCity.textContent = '定位中...';
+            weatherTemp.textContent = '--°C';
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    fetchWeather(lat, lon, '当前位置');
+                    citySelect.value = '';
+                    fetchWeather(lat, lon, null);
                 },
                 () => {
-                    fetchWeather(defaultLat, defaultLon, defaultCity);
+                    weatherCity.textContent = '定位失败，使用默认';
+                    fetchWeather(DEFAULT_LAT, DEFAULT_LON, DEFAULT_CITY);
                 }
             );
-        } else {
-            fetchWeather(defaultLat, defaultLon, defaultCity);
+        }
+
+        citySelect.addEventListener('change', function() {
+            const val = this.value;
+            if (!val) return;
+            const parts = val.split(',');
+            fetchWeather(parseFloat(parts[0]), parseFloat(parts[1]), parts[2]);
+            closeSettings();
+        });
+        getLocationBtn.addEventListener('click', function() {
+            locateAndFetch();
+            closeSettings();
+        });
+        weatherWrapper.addEventListener('click', function(e) {
+            if (e.target.closest('button') || e.target.closest('select')) return;
+            weatherSettings.classList.toggle('open');
+            arrowIcon.classList.toggle('open');
+        });
+        document.addEventListener('click', function(e) {
+            if (!weatherWrapper.contains(e.target)) {
+                weatherSettings.classList.remove('open');
+                arrowIcon.classList.remove('open');
+            }
+        });
+
+        // ---------- 页面加载时初始化天气 ----------
+        window.addEventListener('load', function() {
+            if (navigator.geolocation) {
+                locateAndFetch();
+            } else {
+                fetchWeather(DEFAULT_LAT, DEFAULT_LON, DEFAULT_CITY);
+            }
+            // 加载文章列表
+            loadPosts();
+        });
+
+        // ================================================================
+        // 2. 从 GitHub Issues 加载文章列表（核心新功能）
+        // ================================================================
+        function loadPosts() {
+            const postList = document.getElementById('postList');
+
+            // 如果还没配置用户名，提示
+            if (GITHUB_USERNAME === 'traviswongm' || GITHUB_REPO === 'my-blog') {
+                postList.innerHTML = `
+                    <div class="empty-tip">
+                        ⚠️ 请先在 index.html 的 JavaScript 顶部配置<br>
+                        <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_USERNAME</code> 和 <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_REPO</code>
+                    </div>
+                `;
+                return;
+            }
+
+            // 调用 GitHub API 获取带标签 "post" 的 Issues
+            const apiUrl =
+                `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(issues => {
+                    if (!Array.isArray(issues) || issues.length === 0) {
+                        postList.innerHTML = `
+                            <div class="empty-tip">
+                                📭 还没有文章哦～<br>
+                                去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
+                                并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = '';
+                    issues.forEach(issue => {
+                        // 提取摘要：取正文前 80 个字符
+                        let summary = issue.body || '';
+                        summary = summary.replace(/#/g, '').trim();
+                        if (summary.length > 80) summary = summary.substring(0, 80) + '...';
+
+                        const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
+                        const commentCount = issue.comments;
+
+                        html += `
+                            <div class="post">
+                                <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
+                                <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
+                                <div class="summary">${summary || '（点击标题查看全文）'}</div>
+                            </div>
+                        `;
+                    });
+
+                    postList.innerHTML = html;
+                })
+                .catch(err => {
+                    postList.innerHTML = `
+                        <div class="empty-tip">
+                            ⚠️ 加载失败，请检查网络或确认仓库是否公开。<br>
+                            <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
+                        </div>
+                    `;
+                });
         }
     </script>
 
