@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的个人博客</title>
+    <style>
+        /* ---------- 全局样式 ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f7fa;
+            color: #1f2937;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px 35px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        /* ---------- 头部 ---------- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #eef2f6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .blog-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .weather-box {
+            background: #f0f4ff;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .weather-box .temp {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /* ---------- 文章列表 ---------- */
+        .post {
+            background: #fafbfc;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 18px;
+            border-left: 5px solid #3b82f6;
+            transition: 0.2s;
+        }
+        .post:hover {
+            background: #f0f4ff;
+        }
+        .post h3 {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+        .post h3 a {
+            color: #1f2937;
+            text-decoration: none;
+        }
+        .post h3 a:hover {
+            color: #3b82f6;
+        }
+        .post .meta {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* ---------- 留言板区域 ---------- */
+        .comment-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #eef2f6;
+        }
+        .comment-section h2 {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .comment-section .hint {
+            font-size: 14px;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* ---------- 响应式 ---------- */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .blog-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ====== 头部：标题 + 天气 ====== -->
+        <div class="header">
+            <div class="blog-title">📝 小白的博客</div>
+            <div class="weather-box" id="weatherDisplay">
+                🌤️ 加载天气中...
+            </div>
+        </div>
+
+        <!-- ====== 博客文章列表 ====== -->
+        <h2 style="margin-bottom:18px; font-size:20px;">📖 最新文章</h2>
+
+        <div class="post">
+            <h3><a href="#">Hello World，我的第一个博客！</a></h3>
+            <div class="meta">📅 2026-09-04 ｜ 💬 3条留言</div>
+            <p style="margin-top:8px; color:#4b5563;">终于把博客搭起来了，以后会在这里分享学习笔记和生活感悟。</p>
+        </div>
+
+        <div class="post">
+            <h3><a href="#">今天学会了用 GitHub 做留言板</a></h3>
+            <div class="meta">📅 2026-09-03 ｜ 💬 1条留言</div>
+            <p style="margin-top:8px; color:#4b5563;">用 Giscus 给博客加上了评论功能，访客可以用 GitHub 账号留言啦。</p>
+        </div>
+
+        <div class="post">
+            <h3><a href="#">天气功能上线 ☀️</a></h3>
+            <div class="meta">📅 2026-09-02 ｜ 💬 0条留言</div>
+            <p style="margin-top:8px; color:#4b5563;">接入 Open-Meteo 免费天气 API，博客顶部实时显示当前温度。</p>
+        </div>
+
+        <!-- ====== 留言板（Giscus） ====== -->
+        <div class="comment-section">
+            <h2>💬 留言板</h2>
+            <div class="hint">
+                👋 欢迎留言！你需要登录 <strong>GitHub</strong> 账号才能发表评论。
+                （下方配置完成后会显示留言框）
+            </div>
+
+            <!-- 这里放 Giscus 的脚本，等配置好 GitHub 仓库后替换 -->
+            <div id="giscus-container">
+                <p style="color:#9ca3af; text-align:center; padding:30px 0;">
+                    ⚙️ 请按照文章下方的教程配置 Giscus 后，这里会显示留言框。
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ====== JavaScript：自动获取并显示实时天气 ====== -->
+    <script>
+        // ---------- 1. 获取用户地理位置（需用户同意） ----------
+        // 如果用户拒绝，则默认使用北京（纬度39.9，经度116.4）
+        const defaultLat = 39.9;
+        const defaultLon = 116.4;
+
+        function fetchWeather(lat, lon) {
+            const url =
+                `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const weather = data.current_weather;
+                    const temp = weather.temperature;
+                    const code = weather.weathercode;
+                    // 将天气代码转成表情符号
+                    const emoji = getWeatherEmoji(code);
+                    // 更新页面
+                    document.getElementById('weatherDisplay').innerHTML =
+                        `${emoji} <span class="temp">${Math.round(temp)}°C</span>`;
+                })
+                .catch(() => {
+                    document.getElementById('weatherDisplay').innerHTML = '⚠️ 天气加载失败';
+                });
+        }
+
+        // ---------- 2. 天气代码转表情 ----------
+        function getWeatherEmoji(code) {
+            if (code === 0) return '☀️'; // 晴天
+            if (code <= 3) return '⛅'; // 多云
+            if (code <= 20) return '🌧️'; // 雨
+            if (code <= 30) return '🌨️'; // 雪
+            if (code <= 50) return '🌫️'; // 雾
+            return '🌤️';
+        }
+
+        // ---------- 3. 启动：先尝试获取位置，失败则用默认 ----------
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    fetchWeather(pos.coords.latitude, pos.coords.longitude);
+                },
+                () => {
+                    // 用户拒绝定位，使用默认（北京）
+                    fetchWeather(defaultLat, defaultLon);
+                }
+            );
+        } else {
+            // 浏览器不支持定位
+            fetchWeather(defaultLat, defaultLon);
+        }
+    </script>
+
+</body>
+</html>
