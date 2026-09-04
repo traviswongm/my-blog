@@ -54,9 +54,37 @@
             align-items: center;
             gap: 8px;
         }
-        .weather-box .temp {
-            font-size: 22px;
-            font-weight: 700;
+        .weather-box #weatherText {
+            font-size: 16px;
+        }
+
+        /* ---------- 城市控制栏 ---------- */
+        .weather-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+        .weather-controls button,
+        .weather-controls select {
+            background: #eef2f6;
+            border: none;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #1f2937;
+            outline: none;
+            transition: 0.15s;
+        }
+        .weather-controls button:hover {
+            background: #dce2ec;
+        }
+        .weather-controls select:hover {
+            background: #dce2ec;
         }
 
         /* ---------- 文章列表 ---------- */
@@ -87,7 +115,7 @@
             color: #6b7280;
         }
 
-        /* ---------- 留言板区域 ---------- */
+        /* ---------- 留言板占位 ---------- */
         .comment-section {
             margin-top: 50px;
             padding-top: 30px;
@@ -119,6 +147,10 @@
             .blog-title {
                 font-size: 24px;
             }
+            .weather-controls {
+                justify-content: flex-start;
+                margin-top: 0;
+            }
         }
     </style>
 </head>
@@ -129,9 +161,33 @@
         <!-- ====== 头部：标题 + 天气 ====== -->
         <div class="header">
             <div class="blog-title">📝 小白的博客</div>
-            <div class="weather-box" id="weatherDisplay">
-                🌤️ 加载天气中...
+            <div class="weather-box">
+                <span id="weatherText">🌤️ 加载中...</span>
             </div>
+        </div>
+
+        <!-- ====== 城市选择控制栏 ====== -->
+        <div class="weather-controls">
+            <button id="getLocationBtn">📍 获取当前位置</button>
+            <select id="citySelect">
+                <option value="">🌆 选择城市...</option>
+                <option value="39.9,116.4,北京">北京</option>
+                <option value="31.2,121.5,上海">上海</option>
+                <option value="23.1,113.3,广州">广州</option>
+                <option value="22.5,114.1,深圳">深圳</option>
+                <option value="30.6,114.3,武汉">武汉</option>
+                <option value="34.3,108.9,西安">西安</option>
+                <option value="30.6,104.1,成都">成都</option>
+                <option value="29.6,106.5,重庆">重庆</option>
+                <option value="32.1,118.8,南京">南京</option>
+                <option value="30.3,120.2,杭州">杭州</option>
+                <option value="36.1,120.4,青岛">青岛</option>
+                <option value="43.8,87.6,乌鲁木齐">乌鲁木齐</option>
+                <option value="45.8,126.5,哈尔滨">哈尔滨</option>
+                <option value="25.0,121.5,台北">台北</option>
+                <option value="22.3,114.2,香港">香港</option>
+                <option value="21.2,110.4,海口">海口</option>
+            </select>
         </div>
 
         <!-- ====== 博客文章列表 ====== -->
@@ -150,82 +206,123 @@
         </div>
 
         <div class="post">
-            <h3><a href="#">天气功能上线 ☀️</a></h3>
+            <h3><a href="#">天气功能升级 ☀️</a></h3>
             <div class="meta">📅 2026-09-02 ｜ 💬 0条留言</div>
-            <p style="margin-top:8px; color:#4b5563;">接入 Open-Meteo 免费天气 API，博客顶部实时显示当前温度。</p>
+            <p style="margin-top:8px; color:#4b5563;">现在可以自动定位，也可以手动切换城市查看不同地区的天气。</p>
         </div>
 
-        <!-- ====== 留言板（Giscus） ====== -->
+        <!-- ====== 留言板（暂未配置） ====== -->
         <div class="comment-section">
             <h2>💬 留言板</h2>
             <div class="hint">
-                👋 欢迎留言！你需要登录 <strong>GitHub</strong> 账号才能发表评论。
-                （下方配置完成后会显示留言框）
+                👋 欢迎留言！你需要登录 <strong>GitHub</strong> 账号才能发表评论。<br />
+                （留言板功能尚未配置，稍后可以激活 Giscus。）
             </div>
-
-            <!-- 这里放 Giscus 的脚本，等配置好 GitHub 仓库后替换 -->
-            <div id="giscus-container">
-                <p style="color:#9ca3af; text-align:center; padding:30px 0;">
-                    ⚙️ 请按照文章下方的教程配置 Giscus 后，这里会显示留言框。
-                </p>
+            <div style="text-align:center; padding:20px 0; color:#9ca3af;">
+                ⚙️ 留言板配置教程待补充
             </div>
         </div>
 
     </div>
 
     <!-- ============================================================ -->
-    <!-- ====== JavaScript：自动获取并显示实时天气 ====== -->
+    <!-- ====== JavaScript：自动定位 + 手动选择城市 ====== -->
     <script>
-        // ---------- 1. 获取用户地理位置（需用户同意） ----------
-        // 如果用户拒绝，则默认使用北京（纬度39.9，经度116.4）
+        // ---------- 默认城市（定位失败时使用） ----------
         const defaultLat = 39.9;
         const defaultLon = 116.4;
+        const defaultCity = '北京';
 
-        function fetchWeather(lat, lon) {
+        // ---------- DOM 元素 ----------
+        const weatherText = document.getElementById('weatherText');
+        const citySelect = document.getElementById('citySelect');
+        const getLocationBtn = document.getElementById('getLocationBtn');
+
+        // ---------- 获取天气 ----------
+        function fetchWeather(lat, lon, cityName) {
             const url =
                 `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+
+            weatherText.innerHTML = '⏳ 加载中...';
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     const weather = data.current_weather;
-                    const temp = weather.temperature;
+                    const temp = Math.round(weather.temperature);
                     const code = weather.weathercode;
-                    // 将天气代码转成表情符号
                     const emoji = getWeatherEmoji(code);
-                    // 更新页面
-                    document.getElementById('weatherDisplay').innerHTML =
-                        `${emoji} <span class="temp">${Math.round(temp)}°C</span>`;
+
+                    const displayCity = cityName || '当前位置';
+                    weatherText.innerHTML = `${emoji} ${displayCity} ${temp}°C`;
                 })
                 .catch(() => {
-                    document.getElementById('weatherDisplay').innerHTML = '⚠️ 天气加载失败';
+                    weatherText.innerHTML = '⚠️ 加载失败';
                 });
         }
 
-        // ---------- 2. 天气代码转表情 ----------
+        // ---------- 天气代码转表情 ----------
         function getWeatherEmoji(code) {
-            if (code === 0) return '☀️'; // 晴天
-            if (code <= 3) return '⛅'; // 多云
-            if (code <= 20) return '🌧️'; // 雨
-            if (code <= 30) return '🌨️'; // 雪
-            if (code <= 50) return '🌫️'; // 雾
+            if (code === 0) return '☀️';
+            if (code <= 3) return '⛅';
+            if (code <= 20) return '🌧️';
+            if (code <= 30) return '🌨️';
+            if (code <= 50) return '🌫️';
             return '🌤️';
         }
 
-        // ---------- 3. 启动：先尝试获取位置，失败则用默认 ----------
+        // ---------- 使用浏览器定位 ----------
+        function getLocationAndWeather() {
+            if (navigator.geolocation) {
+                weatherText.innerHTML = '⏳ 定位中...';
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        citySelect.value = ''; // 清空选择框
+                        fetchWeather(lat, lon, '当前位置');
+                    },
+                    () => {
+                        weatherText.innerHTML = '📍 定位失败，使用默认城市';
+                        fetchWeather(defaultLat, defaultLon, defaultCity);
+                    }
+                );
+            } else {
+                weatherText.innerHTML = '⚠️ 浏览器不支持定位';
+                fetchWeather(defaultLat, defaultLon, defaultCity);
+            }
+        }
+
+        // ---------- 手动选择城市 ----------
+        citySelect.addEventListener('change', function() {
+            const value = this.value;
+            if (!value) return;
+
+            const parts = value.split(',');
+            const lat = parseFloat(parts[0]);
+            const lon = parseFloat(parts[1]);
+            const cityName = parts[2];
+
+            fetchWeather(lat, lon, cityName);
+        });
+
+        // ---------- 点击"获取当前位置"按钮 ----------
+        getLocationBtn.addEventListener('click', getLocationAndWeather);
+
+        // ---------- 页面加载时自动定位 ----------
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    fetchWeather(pos.coords.latitude, pos.coords.longitude);
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    fetchWeather(lat, lon, '当前位置');
                 },
                 () => {
-                    // 用户拒绝定位，使用默认（北京）
-                    fetchWeather(defaultLat, defaultLon);
+                    fetchWeather(defaultLat, defaultLon, defaultCity);
                 }
             );
         } else {
-            // 浏览器不支持定位
-            fetchWeather(defaultLat, defaultLon);
+            fetchWeather(defaultLat, defaultLon, defaultCity);
         }
     </script>
 
