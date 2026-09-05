@@ -264,13 +264,13 @@
     <!-- ====== JavaScript ====== -->
     <script>
         // ================================================================
-        // 1. 请在这里配置你的 GitHub 仓库信息！
+        // 👇 重要！请修改下面两行，改成你自己的 GitHub 信息
         // ================================================================
-        const GITHUB_USERNAME = '你的GitHub用户名'; // 改成你的用户名，比如 'zhangsan'
-        const GITHUB_REPO = 'my-blog'; // 改成你的仓库名，比如 'my-blog'
+        const GITHUB_USERNAME = '你的GitHub用户名'; // 比如 'zhangsan'
+        const GITHUB_REPO = 'my-blog';            // 比如 'my-blog'
         // ================================================================
 
-        // ---------- 天气逻辑（和之前一样） ----------
+        // ---------- 天气逻辑 ----------
         const weatherIcon = document.getElementById('weatherIcon');
         const weatherCity = document.getElementById('weatherCity');
         const weatherTemp = document.getElementById('weatherTemp');
@@ -384,24 +384,19 @@
             }
         });
 
-        // ---------- 页面加载时初始化天气 ----------
         window.addEventListener('load', function() {
             if (navigator.geolocation) {
                 locateAndFetch();
             } else {
                 fetchWeather(DEFAULT_LAT, DEFAULT_LON, DEFAULT_CITY);
             }
-            // 加载文章列表
             loadPosts();
         });
 
-        // ================================================================
-        // 2. 从 GitHub Issues 加载文章列表（核心新功能）
-        // ================================================================
+        // ---------- 从 GitHub Issues 加载文章 ----------
         function loadPosts() {
             const postList = document.getElementById('postList');
 
-            // 如果还没配置用户名，提示
             if (GITHUB_USERNAME === 'traviswongm' || GITHUB_REPO === 'my-blog') {
                 postList.innerHTML = `
                     <div class="empty-tip">
@@ -412,7 +407,6 @@
                 return;
             }
 
-            // 调用 GitHub API 获取带标签 "post" 的 Issues
             const apiUrl =
                 `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
 
@@ -432,14 +426,11 @@
 
                     let html = '';
                     issues.forEach(issue => {
-                        // 提取摘要：取正文前 80 个字符
                         let summary = issue.body || '';
                         summary = summary.replace(/#/g, '').trim();
                         if (summary.length > 80) summary = summary.substring(0, 80) + '...';
-
                         const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
                         const commentCount = issue.comments;
-
                         html += `
                             <div class="post">
                                 <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
@@ -448,7 +439,6 @@
                             </div>
                         `;
                     });
-
                     postList.innerHTML = html;
                 })
                 .catch(err => {
