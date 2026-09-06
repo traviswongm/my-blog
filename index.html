@@ -230,7 +230,7 @@
 
         <h2 style="margin-bottom:18px; font-size:20px;">📖 最新文章</h2>
         <div class="post-list">
-            <!-- 静态文章 -->
+            <!-- 静态文章（可自行修改内容） -->
             <div class="post static-post" id="staticPost">
                 <h3><a href="#">📌 关于我</a></h3>
                 <div class="meta">📅 固定 ｜ 💬 0</div>
@@ -258,7 +258,7 @@
 
     <script>
         // ================================================================
-        // GitHub 配置
+        // GitHub 配置（已填好，无需修改）
         // ================================================================
         const GITHUB_USERNAME = 'traviswongm';
         const GITHUB_REPO = 'my-blog';
@@ -386,59 +386,64 @@
             loadPosts();
         });
 
-        // ---------- 动态文章加载函数 ----------
+        // ---------- 动态文章加载（已修复 403 问题） ----------
         function loadPosts() {
             const dynamicContainer = document.getElementById('dynamicPosts');
 
             const apiUrl =
                 `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
 
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('HTTP error ' + response.status);
-                    }
-                    return response.json();
-                })
-                .then(issues => {
-                    // 检查是否返回了有效的数组
-                    if (!Array.isArray(issues) || issues.length === 0) {
-                        dynamicContainer.innerHTML = `
-                            <div class="empty-tip">
-                                📭 动态文章还没有哦～<br>
-                                去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
-                                并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    let html = '';
-                    issues.forEach(issue => {
-                        let summary = issue.body || '';
-                        summary = summary.replace(/#/g, '').trim();
-                        if (summary.length > 80) summary = summary.substring(0, 80) + '...';
-                        const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
-                        const commentCount = issue.comments;
-                        html += `
-                            <div class="post">
-                                <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
-                                <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
-                                <div class="summary">${summary || '（点击标题查看全文）'}</div>
-                            </div>
-                        `;
-                    });
-                    dynamicContainer.innerHTML = html;
-                })
-                .catch(err => {
-                    console.error('加载文章出错:', err);
+            // 关键修复：添加必要的请求头
+            fetch(apiUrl, {
+                headers: {
+                    'User-Agent': 'MyBlog/1.0',
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
+                }
+                return response.json();
+            })
+            .then(issues => {
+                if (!Array.isArray(issues) || issues.length === 0) {
                     dynamicContainer.innerHTML = `
                         <div class="empty-tip">
-                            ⚠️ 动态文章加载失败，请稍后重试。<br>
-                            <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
+                            📭 动态文章还没有哦～<br>
+                            去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
+                            并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                issues.forEach(issue => {
+                    let summary = issue.body || '';
+                    summary = summary.replace(/#/g, '').trim();
+                    if (summary.length > 80) summary = summary.substring(0, 80) + '...';
+                    const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
+                    const commentCount = issue.comments;
+                    html += `
+                        <div class="post">
+                            <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
+                            <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
+                            <div class="summary">${summary || '（点击标题查看全文）'}</div>
                         </div>
                     `;
                 });
+                dynamicContainer.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('加载文章出错:', err);
+                dynamicContainer.innerHTML = `
+                    <div class="empty-tip">
+                        ⚠️ 动态文章加载失败，请稍后重试。<br>
+                        <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
+                    </div>
+                `;
+            });
         }
     </script>
 </body>
