@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>王涛的自控笔记</title>
+    <!-- CSS 部分同上，为了节省篇幅，省略，但实际要包含完整样式，我们在这里不省略 -->
     <style>
+        /* 将之前的全部样式复制过来，确保样式完整 */
         * {
             margin: 0;
             padding: 0;
@@ -262,8 +264,8 @@
         // ================================================================
         const GITHUB_USERNAME = 'traviswongm';
         const GITHUB_REPO = 'my-blog';
-        // 👇 请把你生成的 Token 替换到下面这行（保留单引号）
-        const GITHUB_TOKEN = '这里替换成你的真实token';
+        // 👇 请把你生成的 Token 替换到下面这行（保留单引号），确保 Token 值不包含任何中文或特殊符号
+        const GITHUB_TOKEN = '这里替换成你的真实token'; // 例如 'ghp_abcdef123456...'
 
         // ---------- 天气逻辑 ----------
         const weatherIcon = document.getElementById('weatherIcon');
@@ -390,72 +392,68 @@
 
         // ---------- 动态文章加载（使用 Token 认证） ----------
         function loadPosts() {
-            const dynamicContainer = document.getElementById('dynamicPosts');
+            var dynamicContainer = document.getElementById('dynamicPosts');
 
             // 检查 Token 是否已配置
-            if (!GITHUB_TOKEN || GITHUB_TOKEN === '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') {
-                dynamicContainer.innerHTML = `
-                    <div class="empty-tip">
-                        ⚠️ 请先在代码中配置 <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_TOKEN</code><br>
-                        在 GitHub → Settings → Developer settings → Personal access tokens 中生成
-                    </div>
-                `;
+            if (!GITHUB_TOKEN || GITHUB_TOKEN === '这里替换成你的真实token') {
+                dynamicContainer.innerHTML = 
+                    '<div class="empty-tip">' +
+                        '⚠️ 请先在代码中配置 <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_TOKEN</code><br>' +
+                        '在 GitHub → Settings → Developer settings → Personal access tokens 中生成' +
+                    '</div>';
                 return;
             }
 
-            const apiUrl =
-                `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
+            var apiUrl = 'https://api.github.com/repos/' + GITHUB_USERNAME + '/' + GITHUB_REPO + 
+                         '/issues?labels=post&state=open&per_page=20&sort=created&direction=desc';
 
-            fetch(apiUrl, {
-                headers: {
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
-                    'User-Agent': 'MyBlog/1.0',
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            })
-            .then(response => {
+            // 使用简单的 headers 对象，确保所有键和值都是纯 ASCII 字符串
+            var headers = new Headers();
+            headers.append('Authorization', 'Bearer ' + GITHUB_TOKEN);
+            headers.append('User-Agent', 'MyBlog/1.0');
+            headers.append('Accept', 'application/vnd.github.v3+json');
+
+            fetch(apiUrl, { headers: headers })
+            .then(function(response) {
                 if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}`);
+                    throw new Error('HTTP error ' + response.status);
                 }
                 return response.json();
             })
-            .then(issues => {
+            .then(function(issues) {
                 if (!Array.isArray(issues) || issues.length === 0) {
-                    dynamicContainer.innerHTML = `
-                        <div class="empty-tip">
-                            📭 动态文章还没有哦～<br>
-                            去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
-                            并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
-                        </div>
-                    `;
+                    dynamicContainer.innerHTML = 
+                        '<div class="empty-tip">' +
+                            '📭 动态文章还没有哦～<br>' +
+                            '去你的 GitHub 仓库 <a href="https://github.com/' + GITHUB_USERNAME + '/' + GITHUB_REPO + '/issues" target="_blank">创建一个 Issue</a>，<br>' +
+                            '并给它打上 <strong>post</strong> 标签，就会自动显示在这里！' +
+                        '</div>';
                     return;
                 }
 
-                let html = '';
-                issues.forEach(issue => {
-                    let summary = issue.body || '';
+                var html = '';
+                issues.forEach(function(issue) {
+                    var summary = issue.body || '';
                     summary = summary.replace(/#/g, '').trim();
                     if (summary.length > 80) summary = summary.substring(0, 80) + '...';
-                    const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
-                    const commentCount = issue.comments;
-                    html += `
-                        <div class="post">
-                            <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
-                            <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
-                            <div class="summary">${summary || '（点击标题查看全文）'}</div>
-                        </div>
-                    `;
+                    var date = new Date(issue.created_at).toLocaleDateString('zh-CN');
+                    var commentCount = issue.comments;
+                    html += 
+                        '<div class="post">' +
+                            '<h3><a href="' + issue.html_url + '" target="_blank">' + issue.title + '</a></h3>' +
+                            '<div class="meta">📅 ' + date + ' ｜ 💬 ' + commentCount + ' 条留言</div>' +
+                            '<div class="summary">' + (summary || '（点击标题查看全文）') + '</div>' +
+                        '</div>';
                 });
                 dynamicContainer.innerHTML = html;
             })
-            .catch(err => {
+            .catch(function(err) {
                 console.error('加载文章出错:', err);
-                dynamicContainer.innerHTML = `
-                    <div class="empty-tip">
-                        ⚠️ 动态文章加载失败，请稍后重试。<br>
-                        <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
-                    </div>
-                `;
+                dynamicContainer.innerHTML = 
+                    '<div class="empty-tip">' +
+                        '⚠️ 动态文章加载失败，请稍后重试。<br>' +
+                        '<span style="font-size:13px;color:#9ca3af;">错误信息：' + err.message + '</span>' +
+                    '</div>';
             });
         }
     </script>
