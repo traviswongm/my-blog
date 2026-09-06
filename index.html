@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>王涛的自控笔记</title>
     <style>
-        /* ---------- 全局 ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -25,8 +24,6 @@
             padding: 40px 35px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
         }
-
-        /* ---------- 头部 ---------- */
         .header {
             display: flex;
             justify-content: space-between;
@@ -43,8 +40,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        /* ---------- 天气 ---------- */
         .weather-wrapper {
             position: relative;
             cursor: pointer;
@@ -73,7 +68,6 @@
         .weather-display .arrow.open {
             transform: rotate(180deg);
         }
-
         .weather-settings {
             position: absolute;
             top: calc(100% + 8px);
@@ -112,8 +106,6 @@
         .weather-settings select {
             appearance: auto;
         }
-
-        /* ---------- 文章列表 ---------- */
         .post-list {
             margin-top: 10px;
         }
@@ -148,7 +140,6 @@
             color: #4b5563;
             line-height: 1.6;
         }
-        /* 静态文章特殊样式（可选，加个金色边框以区分） */
         .static-post {
             border-left-color: #f59e0b;
             background: #fffbeb;
@@ -163,8 +154,6 @@
         .empty-tip a {
             color: #3b82f6;
         }
-
-        /* ---------- 留言板占位 ---------- */
         .comment-section {
             margin-top: 50px;
             padding-top: 30px;
@@ -182,8 +171,6 @@
             border-radius: 12px;
             margin-bottom: 20px;
         }
-
-        /* ---------- 响应式 ---------- */
         @media (max-width: 600px) {
             .container {
                 padding: 20px 15px;
@@ -207,12 +194,8 @@
 <body>
 
     <div class="container">
-
-        <!-- ====== 头部 ====== -->
         <div class="header">
             <div class="blog-title">📝 王涛的自控笔记</div>
-
-            <!-- 天气组件 -->
             <div class="weather-wrapper" id="weatherWrapper">
                 <div class="weather-display" id="weatherDisplay">
                     <span id="weatherIcon">☀️</span>
@@ -245,11 +228,9 @@
             </div>
         </div>
 
-        <!-- ====== 文章列表 ====== -->
         <h2 style="margin-bottom:18px; font-size:20px;">📖 最新文章</h2>
         <div class="post-list">
-
-            <!-- ====== 静态文章（固定显示，修改此处即可更新内容） ====== -->
+            <!-- 静态文章 -->
             <div class="post static-post" id="staticPost">
                 <h3><a href="#">📌 关于我</a></h3>
                 <div class="meta">📅 固定 ｜ 💬 0</div>
@@ -259,12 +240,10 @@
                     （你可以修改这段文字，位于 <code>index.html</code> 的静态文章区域。）
                 </div>
             </div>
-
-            <!-- ====== 动态文章将通过 JS 加载到这里 ====== -->
+            <!-- 动态文章将加载到这里 -->
             <div id="dynamicPosts"></div>
         </div>
 
-        <!-- ====== 留言板占位 ====== -->
         <div class="comment-section">
             <h2>💬 留言板</h2>
             <div class="hint">
@@ -275,20 +254,16 @@
                 ⚙️ 留言板配置教程待补充
             </div>
         </div>
-
     </div>
 
-    <!-- ============================================================ -->
-    <!-- ====== JavaScript ====== -->
     <script>
         // ================================================================
-        // 👇 重要！请修改下面两行，改成你自己的 GitHub 信息
+        // GitHub 配置
         // ================================================================
         const GITHUB_USERNAME = 'traviswongm';
         const GITHUB_REPO = 'my-blog';
-        // ================================================================
 
-        // ---------- 天气逻辑（不变） ----------
+        // ---------- 天气逻辑 ----------
         const weatherIcon = document.getElementById('weatherIcon');
         const weatherCity = document.getElementById('weatherCity');
         const weatherTemp = document.getElementById('weatherTemp');
@@ -411,70 +386,60 @@
             loadPosts();
         });
 
-        // ---------- 从 GitHub Issues 加载动态文章（显示在 #dynamicPosts 中） ----------
+        // ---------- 动态文章加载函数 ----------
         function loadPosts() {
             const dynamicContainer = document.getElementById('dynamicPosts');
-
-            // 如果未配置用户名，提示（此时静态文章仍会显示）
-            if (GITHUB_USERNAME === '你的GitHub用户名' || GITHUB_REPO === 'my-blog') {
-                dynamicContainer.innerHTML = `
-                    <div class="empty-tip">
-                        ⚠️ 请先在 index.html 的 JavaScript 顶部配置<br>
-                        <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_USERNAME</code> 和 <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_REPO</code>
-                    </div>
-                `;
-                return;
-            }
 
             const apiUrl =
                 `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
 
-            fetch(apiUrl, {
-                headers: {
-                    // 如果你有 GitHub Token，可以在这里添加（可选，可提高请求限制）
-                    // 'Authorization': 'Bearer 你的token'
-                }
-            })
-            .then(response => response.json())
-            .then(issues => {
-                if (!Array.isArray(issues) || issues.length === 0) {
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP error ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(issues => {
+                    // 检查是否返回了有效的数组
+                    if (!Array.isArray(issues) || issues.length === 0) {
+                        dynamicContainer.innerHTML = `
+                            <div class="empty-tip">
+                                📭 动态文章还没有哦～<br>
+                                去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
+                                并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = '';
+                    issues.forEach(issue => {
+                        let summary = issue.body || '';
+                        summary = summary.replace(/#/g, '').trim();
+                        if (summary.length > 80) summary = summary.substring(0, 80) + '...';
+                        const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
+                        const commentCount = issue.comments;
+                        html += `
+                            <div class="post">
+                                <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
+                                <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
+                                <div class="summary">${summary || '（点击标题查看全文）'}</div>
+                            </div>
+                        `;
+                    });
+                    dynamicContainer.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('加载文章出错:', err);
                     dynamicContainer.innerHTML = `
                         <div class="empty-tip">
-                            📭 动态文章还没有哦～<br>
-                            去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
-                            并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
-                        </div>
-                    `;
-                    return;
-                }
-
-                let html = '';
-                issues.forEach(issue => {
-                    let summary = issue.body || '';
-                    summary = summary.replace(/#/g, '').trim();
-                    if (summary.length > 80) summary = summary.substring(0, 80) + '...';
-                    const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
-                    const commentCount = issue.comments;
-                    html += `
-                        <div class="post">
-                            <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
-                            <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
-                            <div class="summary">${summary || '（点击标题查看全文）'}</div>
+                            ⚠️ 动态文章加载失败，请稍后重试。<br>
+                            <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
                         </div>
                     `;
                 });
-                dynamicContainer.innerHTML = html;
-            })
-            .catch(err => {
-                dynamicContainer.innerHTML = `
-                    <div class="empty-tip">
-                        ⚠️ 动态文章加载失败，请稍后重试。<br>
-                        <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
-                    </div>
-                `;
-            });
         }
     </script>
-
 </body>
 </html>
