@@ -148,6 +148,11 @@
             color: #4b5563;
             line-height: 1.6;
         }
+        /* 静态文章特殊样式（可选，加个金色边框以区分） */
+        .static-post {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
         .empty-tip {
             text-align: center;
             color: #9ca3af;
@@ -240,10 +245,23 @@
             </div>
         </div>
 
-        <!-- ====== 文章列表（动态加载） ====== -->
+        <!-- ====== 文章列表 ====== -->
         <h2 style="margin-bottom:18px; font-size:20px;">📖 最新文章</h2>
-        <div class="post-list" id="postList">
-            <div style="text-align:center; padding:30px; color:#9ca3af;">⏳ 文章加载中...</div>
+        <div class="post-list">
+
+            <!-- ====== 静态文章（固定显示，修改此处即可更新内容） ====== -->
+            <div class="post static-post" id="staticPost">
+                <h3><a href="#">📌 关于我</a></h3>
+                <div class="meta">📅 固定 ｜ 💬 0</div>
+                <div class="summary">
+                    我是王涛，一名自控领域的爱好者。这个博客用于记录我的学习笔记、项目经验和技术思考。欢迎交流！
+                    <br>
+                    （你可以修改这段文字，位于 <code>index.html</code> 的静态文章区域。）
+                </div>
+            </div>
+
+            <!-- ====== 动态文章将通过 JS 加载到这里 ====== -->
+            <div id="dynamicPosts"></div>
         </div>
 
         <!-- ====== 留言板占位 ====== -->
@@ -266,11 +284,11 @@
         // ================================================================
         // 👇 重要！请修改下面两行，改成你自己的 GitHub 信息
         // ================================================================
-        const GITHUB_USERNAME = 'traviswongm'; // 比如 'zhangsan'
-        const GITHUB_REPO = 'my-blog';            // 比如 'my-blog'
+        const GITHUB_USERNAME = 'traviswongm';
+        const GITHUB_REPO = 'my-blog';
         // ================================================================
 
-        // ---------- 天气逻辑 ----------
+        // ---------- 天气逻辑（不变） ----------
         const weatherIcon = document.getElementById('weatherIcon');
         const weatherCity = document.getElementById('weatherCity');
         const weatherTemp = document.getElementById('weatherTemp');
@@ -393,12 +411,13 @@
             loadPosts();
         });
 
-        // ---------- 从 GitHub Issues 加载文章 ----------
+        // ---------- 从 GitHub Issues 加载动态文章（显示在 #dynamicPosts 中） ----------
         function loadPosts() {
-            const postList = document.getElementById('postList');
+            const dynamicContainer = document.getElementById('dynamicPosts');
 
+            // 如果未配置用户名，提示（此时静态文章仍会显示）
             if (GITHUB_USERNAME === '你的GitHub用户名' || GITHUB_REPO === 'my-blog') {
-                postList.innerHTML = `
+                dynamicContainer.innerHTML = `
                     <div class="empty-tip">
                         ⚠️ 请先在 index.html 的 JavaScript 顶部配置<br>
                         <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_USERNAME</code> 和 <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_REPO</code>
@@ -410,45 +429,50 @@
             const apiUrl =
                 `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(issues => {
-                    if (!Array.isArray(issues) || issues.length === 0) {
-                        postList.innerHTML = `
-                            <div class="empty-tip">
-                                📭 还没有文章哦～<br>
-                                去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
-                                并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    let html = '';
-                    issues.forEach(issue => {
-                        let summary = issue.body || '';
-                        summary = summary.replace(/#/g, '').trim();
-                        if (summary.length > 80) summary = summary.substring(0, 80) + '...';
-                        const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
-                        const commentCount = issue.comments;
-                        html += `
-                            <div class="post">
-                                <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
-                                <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
-                                <div class="summary">${summary || '（点击标题查看全文）'}</div>
-                            </div>
-                        `;
-                    });
-                    postList.innerHTML = html;
-                })
-                .catch(err => {
-                    postList.innerHTML = `
+            fetch(apiUrl, {
+                headers: {
+                    // 如果你有 GitHub Token，可以在这里添加（可选，可提高请求限制）
+                    // 'Authorization': 'Bearer 你的token'
+                }
+            })
+            .then(response => response.json())
+            .then(issues => {
+                if (!Array.isArray(issues) || issues.length === 0) {
+                    dynamicContainer.innerHTML = `
                         <div class="empty-tip">
-                            ⚠️ 加载失败，请检查网络或确认仓库是否公开。<br>
-                            <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
+                            📭 动态文章还没有哦～<br>
+                            去你的 GitHub 仓库 <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO}/issues" target="_blank">创建一个 Issue</a>，<br>
+                            并给它打上 <strong>post</strong> 标签，就会自动显示在这里！
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                issues.forEach(issue => {
+                    let summary = issue.body || '';
+                    summary = summary.replace(/#/g, '').trim();
+                    if (summary.length > 80) summary = summary.substring(0, 80) + '...';
+                    const date = new Date(issue.created_at).toLocaleDateString('zh-CN');
+                    const commentCount = issue.comments;
+                    html += `
+                        <div class="post">
+                            <h3><a href="${issue.html_url}" target="_blank">${issue.title}</a></h3>
+                            <div class="meta">📅 ${date} ｜ 💬 ${commentCount} 条留言</div>
+                            <div class="summary">${summary || '（点击标题查看全文）'}</div>
                         </div>
                     `;
                 });
+                dynamicContainer.innerHTML = html;
+            })
+            .catch(err => {
+                dynamicContainer.innerHTML = `
+                    <div class="empty-tip">
+                        ⚠️ 动态文章加载失败，请稍后重试。<br>
+                        <span style="font-size:13px;color:#9ca3af;">错误信息：${err.message}</span>
+                    </div>
+                `;
+            });
         }
     </script>
 
