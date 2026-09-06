@@ -230,7 +230,7 @@
 
         <h2 style="margin-bottom:18px; font-size:20px;">📖 最新文章</h2>
         <div class="post-list">
-            <!-- 静态文章（可自行修改内容） -->
+            <!-- 静态文章 -->
             <div class="post static-post" id="staticPost">
                 <h3><a href="#">📌 关于我</a></h3>
                 <div class="meta">📅 固定 ｜ 💬 0</div>
@@ -258,10 +258,12 @@
 
     <script>
         // ================================================================
-        // GitHub 配置（已填好，无需修改）
+        // GitHub 配置
         // ================================================================
         const GITHUB_USERNAME = 'traviswongm';
         const GITHUB_REPO = 'my-blog';
+        // 👇 请把你生成的 Token 替换到下面这行（保留单引号）
+        const GITHUB_TOKEN = '这里替换成你的真实token';
 
         // ---------- 天气逻辑 ----------
         const weatherIcon = document.getElementById('weatherIcon');
@@ -386,23 +388,34 @@
             loadPosts();
         });
 
-        // ---------- 动态文章加载（已修复 403 问题） ----------
+        // ---------- 动态文章加载（使用 Token 认证） ----------
         function loadPosts() {
             const dynamicContainer = document.getElementById('dynamicPosts');
+
+            // 检查 Token 是否已配置
+            if (!GITHUB_TOKEN || GITHUB_TOKEN === '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') {
+                dynamicContainer.innerHTML = `
+                    <div class="empty-tip">
+                        ⚠️ 请先在代码中配置 <code style="background:#eef2f6;padding:2px 8px;border-radius:4px;">GITHUB_TOKEN</code><br>
+                        在 GitHub → Settings → Developer settings → Personal access tokens 中生成
+                    </div>
+                `;
+                return;
+            }
 
             const apiUrl =
                 `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?labels=post&state=open&per_page=20&sort=created&direction=desc`;
 
-            // 关键修复：添加必要的请求头
             fetch(apiUrl, {
                 headers: {
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
                     'User-Agent': 'MyBlog/1.0',
                     'Accept': 'application/vnd.github.v3+json'
                 }
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('HTTP error ' + response.status);
+                    throw new Error(`HTTP error ${response.status}`);
                 }
                 return response.json();
             })
